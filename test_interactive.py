@@ -12,7 +12,7 @@ if __name__ == '__main__':
     game = InteractiveGame(
         env_cls=eval_agent.env_bldr.env_cls,
         env_args=eval_agent.env_bldr.env_args,
-        seats_human_plays_list=[0],
+        seats_human_plays_list=[],
         eval_agent=eval_agent,
     )
 
