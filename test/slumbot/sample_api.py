@@ -47,7 +47,7 @@
 
 import requests
 import sys
-import argparse
+import toml
 
 host = 'slumbot.com'
 
@@ -216,7 +216,6 @@ def ParseAction(action):
         'last_bettor': last_bettor,
     }
 
-
 def NewHand(token):
     data = {}
     if token:
@@ -245,7 +244,6 @@ def NewHand(token):
         sys.exit(-1)
         
     return r
-
 
 def Act(token, action):
     data = {'token': token, 'incr': action}
@@ -310,7 +308,6 @@ def PlayHand(token):
         print('Sending incremental action: %s' % incr)
         r = Act(token, incr)
     # Should never get here
-
         
 def Login(username, password):
     data = {"username": username, "password": password}
@@ -344,14 +341,12 @@ def Login(username, password):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Slumbot API example')
-    parser.add_argument('--username', type=str)
-    parser.add_argument('--password', type=str)
-    args = parser.parse_args()
-    username = args.username
-    password = args.password
+    config = toml.load('./config.toml')
+    username = config['username']
+    password = config['password']
     if username and password:
         token = Login(username, password)
+        print(f"token = {token}")
     else:
         token = None
 
