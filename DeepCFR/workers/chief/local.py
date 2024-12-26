@@ -135,8 +135,9 @@ class Chief(_ChiefBase):
 
     # ________________________________ Store a pickled API class to play against the AI ________________________________
     def export_agent(self, step):
-        _dir = ospj(self._t_prof.path_agent_export_storage, str(self._t_prof.name), str(step))
-        file_util.create_dir_if_not_exist(_dir)
+        # _dir = ospj(self._t_prof.path_agent_export_storage, str(self._t_prof.name), str(step))
+        # file_util.create_dir_if_not_exist(_dir)
+        _dir = f"/home/lanhou/Workspace/Deep-CFR/assets/eval/{step}"
 
         # """"""""""""""""""""""""""""
         # Deep CFR

@@ -38,6 +38,7 @@ class HighLevelAlgo(_HighLevelAlgoBase):
         t_syncing_adv = 0.0
 
         for p_learning in range(self._t_prof.n_seats):
+            print(f"player {p_learning}")
             self._update_leaner_actors(update_adv_for_plyrs=self._all_p_aranged)
             print("Generating Data...")
             t0 = time.time()
@@ -67,6 +68,7 @@ class HighLevelAlgo(_HighLevelAlgoBase):
         t_computation_avrg = 0.0
         t_syncing_avrg = 0.0
         for p in range(self._t_prof.n_seats):
+            print(f"begin train avrg, p = {p}")
             _c, _s = self._train_avrg(p_id=p, cfr_iter=cfr_iter)
             t_computation_avrg += _c
             t_syncing_avrg += _s
@@ -79,6 +81,10 @@ class HighLevelAlgo(_HighLevelAlgoBase):
     def _train_adv(self, p_id, cfr_iter):
         t_computation = 0.0
         t_syncing = 0.0
+
+        with open(f'./assets/adv_loss/adv_loss_{p_id}.txt', "a") as fp:
+            fp.write(f"=== CFR ITER {cfr_iter}, PLAYER {p_id} ===\n")
+            fp.close()
 
         # For logging the loss to see convergence in Tensorboard
         if self._t_prof.log_verbose:
@@ -127,10 +133,13 @@ class HighLevelAlgo(_HighLevelAlgoBase):
                                      exp_loss_each_p[p_id], "DCFR_NN_Losses/Advantage", epoch_nr,
                                      accumulated_averaged_loss / SMOOTHING)
                 ])
+                print(f"ADV Accumulated Loss = {accumulated_averaged_loss}")
+                with open(f'./assets/adv_loss/adv_loss_{p_id}.txt', "a") as fp:
+                    fp.write(f"{accumulated_averaged_loss}\n")
+                    fp.close()
                 accumulated_averaged_loss = 0.0
 
             t_syncing += time.time() - t0
-
         return t_computation, t_syncing
 
     def _get_adv_gradients(self, p_id):
@@ -289,6 +298,7 @@ class HighLevelAlgo(_HighLevelAlgoBase):
                                          exp_loss_each_p[p_id], "DCFR_NN_Losses/Average", epoch_nr,
                                          accumulated_averaged_loss / SMOOTHING)
                     ])
+                    print(f"AVRG Accumulated Loss = {accumulated_averaged_loss}")
                     accumulated_averaged_loss = 0.0
 
                 t_syncing += time.time() - t0

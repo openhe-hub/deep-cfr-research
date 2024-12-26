@@ -245,3 +245,18 @@ class TrainingProfile(TrainingProfileBase):
 
         assert isinstance(device_parameter_server, str), "Please pass a string (either 'cpu' or 'cuda')!"
         self.device_parameter_server = torch.device(device_parameter_server)
+
+    #     self._state_attributes = [
+    #         "name", "log_verbose", "log_export_freq", "checkpoint_freq", "eval_agent_export_freq",
+    #         "n_learner_actor_workers", "max_n_las_sync_simultaneously", "nn_type", "path_data",
+    #         "local_crayon_server_docker_address", "device_inference", "device_training", "device_parameter_server",
+    #         "DISTRIBUTED", "CLUSTER", "DEBUGGING", ""
+    #     ]
+    
+    # def state_dict(self):
+    #     return {attr: getattr(self, attr) for attr in self._state_attributes}
+
+    # def load_state_dict(self, state_dict):
+    #     for attr in self._state_attributes:
+    #         if attr in state_dict:
+    #             setattr(self, attr, state_dict[attr])

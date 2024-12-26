@@ -82,6 +82,7 @@ class Driver(DriverBase):
             avrg_times = None
             if self._AVRG and self._any_eval_needs_avrg_net():
                 avrg_times = self.algo.train_average_nets(cfr_iter=_iter_nr)
+                print(f"AVGR time = {avrg_times}")
 
             # """"""""""""""""
             # Eval
@@ -93,6 +94,7 @@ class Driver(DriverBase):
             # Log
             # """"""""""""""""
             if self._cfr_iter % self._t_prof.log_export_freq == 0:
+                print('saving logs...')
                 self.save_logs()
             self.periodically_export_eval_agent()
 

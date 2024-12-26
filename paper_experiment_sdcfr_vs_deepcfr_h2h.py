@@ -15,14 +15,14 @@ if __name__ == '__main__':
 
                                          nn_type="feedforward",  # We also support RNNs, but the paper uses FF
 
-                                         DISTRIBUTED=True,
+                                         DISTRIBUTED=False,
                                          CLUSTER=False,
-                                         n_learner_actor_workers=20,  # 20 workers
+                                         n_learner_actor_workers=32,  # 20 workers
 
                                          # regulate exports
                                          export_each_net=False,
                                          checkpoint_freq=99999999,
-                                         eval_agent_export_freq=1,  # produces around 15GB over 150 iterations!
+                                         eval_agent_export_freq=5,  # produces around 15GB over 150 iterations!
 
                                          n_actions_traverser_samples=3,  # = external sampling in FHP
                                          n_traversals_per_iter=15000,
@@ -64,14 +64,14 @@ if __name__ == '__main__':
                                          use_simplified_headsup_obs=True,
 
                                          h2h_args=H2HArgs(
-                                             n_hands=1500000,  # this is per seat; so in total 3M hands per eval
+                                             n_hands=10000,  # this is per seat; so in total 3M hands per eval
                                          ),
                                          ),
                   # Evaluate Head-to-Head every 15 iterations of both players (= every 30 alternating iterations)
-                  eval_methods={"h2h": 15},
+                  eval_methods={"h2h": 1},
 
                   # 150 = 300 when 2 viewing alternating iterations as 2 (as usually done).
                   # This repo implements alternating iters as a single iter, which is why this says 150.
-                  n_iterations=150,
+                  n_iterations=10,
                   )
     ctrl.run()
