@@ -64,7 +64,7 @@ if __name__ == '__main__':
                                          use_simplified_headsup_obs=True,
 
                                          h2h_args=H2HArgs(
-                                             n_hands=100000,  # this is per seat; so in total 3M hands per eval
+                                             n_hands=50000,  # this is per seat; so in total 3M hands per eval
                                          ),
                                          device_training='cuda',
                                          device_parameter_server='cuda',

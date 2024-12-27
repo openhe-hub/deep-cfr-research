@@ -4,7 +4,7 @@ from DeepCFR.EvalAgentDeepCFR import EvalAgentDeepCFR
 
 if __name__ == '__main__':
     eval_agent = EvalAgentDeepCFR.load_from_disk(
-        path_to_eval_agent='./assets/big_leduc/eval_agentAVRG_NET.pkl'
+        path_to_eval_agent='./assets/fhp/eval_agentAVRG_NET.pkl'
     )
 
     print(f'game cls = {eval_agent.env_bldr.env_cls}')
