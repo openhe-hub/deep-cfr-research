@@ -47,7 +47,9 @@
 
 import requests
 import sys
-import toml
+
+from interactive import InteractiveGame
+from DeepCFR.EvalAgentDeepCFR import EvalAgentDeepCFR
 
 host = 'slumbot.com'
 
@@ -57,6 +59,32 @@ BIG_BLIND = 100
 STACK_SIZE = 20000
 
 last_play = ''
+
+class MyBot:
+    def __init__(self):
+        self.eval_agent = EvalAgentDeepCFR.load_from_disk(
+            path_to_eval_agent='./assets/eval/30/eval_agentSINGLE.pkl'
+        )
+
+        self.game = InteractiveGame(
+            env_cls=self.eval_agent.env_bldr.env_cls,
+            env_args=self.eval_agent.env_bldr.env_args,
+            seats_human_plays_list=[],
+            eval_agent=self.eval_agent,
+        )
+
+        self.game.init()
+    
+    def reset(self, player_id, hole_cards):
+        self.game._seats_human_plays_list = [1, 0][player_id] # rev, player id = slumbot, model id = my bot
+        self.game.reset(player_id, hole_cards)
+    
+    def play_slumbot(self, action: str, data: dict):
+        self.game.play_slumbot(action, data)
+
+    def play_my_bot(self, data: dict) -> str:
+        return self.game.play_my_bot(data)
+
 
 def ParseAction(action):
     """
@@ -298,10 +326,22 @@ def GetGameData(resp, parsed_action):
         'street_last_bet': parsed_action['street_last_bet_to'],
         'total_last_bet': parsed_action['total_last_bet_to'],
     }
-    print(data)
+    return data
+
+def isFirst(resp) -> bool:
+    old_action = resp.get('old_action')
+    action = resp.get('action') 
+    if old_action == '' and action != '':
+        return False
+    else:
+        return True
     
-def PlayHand(token):
+def PlayHand(token, my_bot: MyBot):
     r = NewHand(token)
+    is_first = isFirst(r)
+    print(r)
+    print(f"is first = {is_first}")
+    my_bot.reset(0, r.get('hole_cards'))
     # We may get a new token back from /api/new_hand
     new_token = r.get('token')
     if new_token:
@@ -324,19 +364,18 @@ def PlayHand(token):
             return (token, winnings)
         # Need to check or call
         a = ParseAction(action)
-        GetGameData(r, a)
+        data = GetGameData(r, a)
+
+        # play slumbot
+        my_bot.play_slumbot(diff_action, data)
+
         if 'error' in a:
             print('Error parsing action %s: %s' % (action, a['error']))
             sys.exit(-1)
-        # This sample program implements a naive strategy of "always check or call".
-        if a['last_bettor'] != -1:
-            incr = 'c'
-        else:
-            incr = 'k'
+        incr = my_bot.play_my_bot(data)
         last_play = incr
         print('Sending incremental action: %s' % incr)
         r = Act(token, incr)
-    # Should never get here
         
 def Login(username, password):
     data = {"username": username, "password": password}
@@ -370,21 +409,19 @@ def Login(username, password):
 
 
 def main():
-    config = toml.load('./config.toml')
-    username = config['username']
-    password = config['password']
+    username = 'openhe'
+    password = '5f6e778dx'
     if username and password:
         token = Login(username, password)
     else:
         token = None
 
-    # To avoid SSLError:
-    #   import urllib3
-    #   urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    num_hands = 3
+    num_hands = 1
     winnings = 0
+    # init bot
+    my_bot = MyBot()
     for h in range(num_hands):
-        (token, hand_winnings) = PlayHand(token)
+        (token, hand_winnings) = PlayHand(token, my_bot)
         winnings += hand_winnings
     print('Total winnings: %i' % winnings)
 

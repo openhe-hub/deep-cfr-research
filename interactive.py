@@ -4,6 +4,8 @@ import time
 
 import numpy as np
 
+from typing import Tuple
+from PokerRL.game.Poker import Poker
 
 class InteractiveGame:
     """
@@ -48,71 +50,116 @@ class InteractiveGame:
     def winnings_per_seat(self):
         return copy.deepcopy(self._winnings_per_seat)
 
-    def start_to_play(self, render_mode="TEXT", limit_numpy_digits=True, pause=False):
+    def init(self, render_mode="TEXT", limit_numpy_digits=True):
         if limit_numpy_digits:
             np.set_printoptions(precision=5, suppress=True)
-        self._env.print_tutorial()
+    
+    def reset(self, player_id, hold_cards):
+        self._env.reset()
+        if self._eval_agent is not None:
+            self._eval_agent.reset(deck_state_dict=self._env.cards_state_dict())
+        self._env.seats[player_id].hand = np.array([self.card2arr(card) for card in hold_cards])
+        self._env.seats[[1, 0][player_id]].hand = np.array([])
+        self._env.render(mode="TEXT")
 
-        # play forever until human player manually stops
-        while True:
-            print()
-            print("****************************")
-            print("*        GAME START        *")
-            print("****************************")
-            print()
+    def play_slumbot(self, action: str, data: dict):
+        current_player_id = 0
+        action_tuple = self._env.bot_api_ask_action(self.slumbot_to_model(action))
 
-            # ______________________________________________ one episode _______________________________________________
-
-            self._env.reset()
-            if self._eval_agent is not None:
-                # The agent has his own copy of the env within its EvalAgent. The following lines sets the decks between
-                # self.env and the agent's env equal. However, the agent cannot see any private cards but his own in his
-                # observations, of course!
-                self._eval_agent.reset(deck_state_dict=self._env.cards_state_dict())
-
-            self._env.render(mode=render_mode)
-            while True:
-                current_player_id = self._env.current_player.seat_id
-
-                if self._eval_agent is not None:
-                    assert np.array_equal(self._env.board, self._eval_agent._internal_env_wrapper.env.board)
-                    assert np.array_equal(np.array(self._env.side_pots),
-                                          np.array(self._eval_agent._internal_env_wrapper.env.side_pots))
-                    assert self._env.current_player.seat_id == \
-                           self._eval_agent._internal_env_wrapper.env.current_player.seat_id
-                    assert self._env.current_round == self._eval_agent._internal_env_wrapper.env.current_round
-
-                # Human acts
-                if current_player_id in self._seats_human_plays_list:
-                    action_tuple = self._env.human_api_ask_action()
-
-                    if self._eval_agent is not None:
-                        print(f"[Human Input] action = {action_tuple}, curr player id = {current_player_id}")
-                        self._eval_agent.notify_of_processed_tuple_action(action_he_did=action_tuple,
+        if self._eval_agent is not None:
+            print(f"[Slumbot Input] action = {action_tuple}, curr player id = {current_player_id}")
+            self._eval_agent.notify_of_processed_tuple_action(action_he_did=action_tuple,
                                                                           p_id_acted=current_player_id)
+        
+        self._env.current_round = data['street']
+        self._env.board = np.array([self.card2arr(card) for card in data['hole_cards']])
+        self.main_pot = data['street_last_bet']
+        self.side_pots = data['total_last_bet']
 
-                # Agent acts
-                else:
-                    a_idx, frac = self._eval_agent.get_action_frac_tuple(step_env=True)
-                    if a_idx == 2:
-                        action_tuple = [2, self._env.get_fraction_of_pot_raise(fraction=frac,
+    def play_my_bot(self, data: dict):
+        current_player_id = 0
+        a_idx, frac = self._eval_agent.get_action_frac_tuple(step_env=True)
+        if a_idx == 2:
+            action_tuple = [2, self._env.get_fraction_of_pot_raise(fraction=frac,
                                                                                player_that_bets=current_player_id)]
-                    else:
-                        action_tuple = [a_idx, -1]
+        else:
+            action_tuple = [a_idx, -1]
                     
-                    print(f"[AI] {action_tuple}")
+        print(f"[Mybot] {action_tuple}")
+        return self.model_to_slumbot(action_tuple)
 
-                obs, rews, done, info = self._env._step(processed_action=action_tuple)
-                self._env.render(mode=render_mode)
+    def start_to_play(self, render_mode="TEXT", limit_numpy_digits=True):
+        # ______________________________________________ one episode _______________________________________________
+        self._env.render(mode=render_mode)
+        while True:
+            current_player_id = self._env.current_player.seat_id
 
-                if done:
-                    break
+            # if self._eval_agent is not None:
+            #     assert np.array_equal(self._env.board, self._eval_agent._internal_env_wrapper.env.board)
+            #     assert np.array_equal(np.array(self._env.side_pots),
+            #                               np.array(self._eval_agent._internal_env_wrapper.env.side_pots))
+            #     assert self._env.current_player.seat_id == \
+            #                self._eval_agent._internal_env_wrapper.env.current_player.seat_id
+            #     assert self._env.current_round == self._eval_agent._internal_env_wrapper.env.current_round
+
+            # Human acts
+            # if current_player_id in self._seats_human_plays_list:
+                
+
+            # Agent acts
+            # else:
+
+
+            obs, rews, done, info = self._env._step(processed_action=action_tuple)
+            self._env.render(mode=render_mode)
+
+            if done:
+                break
 
             for s in range(self._env.N_SEATS):
                 self._winnings_per_seat[s] += np.rint(rews[s] * self._env.REWARD_SCALAR)
 
             print("")
             print("Current Winnings per player:", self._winnings_per_seat)
-            time.sleep(0.5)
-            if pause:
-                input("Press Enter to go to the next round.")
+
+
+    def model_to_slumbot(self, action_tuple: Tuple[int, int]) -> str:
+        action = action_tuple[0]
+        bet_sz = action_tuple[1]
+        incr = ''
+
+        if action == Poker.FOLD:
+            incr = 'f'
+        elif action == Poker.CHECK_CALL:
+            if bet_sz == -1:
+                incr = 'k'
+            else:
+                incr = 'c'
+        elif action == Poker.BET_RAISE:
+            incr = f'b{abs(bet_sz)}'
+        
+        return incr
+
+    def slumbot_to_model(self, action: str) -> int:
+        if action == 'f':
+            return Poker.FOLD
+        elif action == 'k' or action == 'c':
+            return Poker.CHECK_CALL
+        elif action.startswith('b'):
+            return Poker.BET_RAISE
+    
+    def card2arr(str, card: str) -> np.array:
+        assert len(card) == 2, "Card string must be exactly 2 characters."
+
+        RANK_DICT = {'2': 0, '3': 1, '4': 2, '5': 3, '6': 4, '7': 5, '8': 6, '9': 7, 'T': 8, 'J': 9, 'Q': 10, 'K': 11, 'A': 12}
+        SUIT_DICT = {'h': 0, 'd': 1, 's': 2, 'c': 3}
+
+        rank = RANK_DICT.get(card[0])
+        suit = SUIT_DICT.get(card[1])
+
+        assert rank is not None, f"Invalid rank: {card[0]}"
+        assert suit is not None, f"Invalid suit: {card[1]}"
+
+        return np.array([rank, suit])
+
+
