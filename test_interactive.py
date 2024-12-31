@@ -1,10 +1,9 @@
-from PokerRL.game.InteractiveGame import InteractiveGame
+from interactive import InteractiveGame
 from DeepCFR.EvalAgentDeepCFR import EvalAgentDeepCFR
-
 
 if __name__ == '__main__':
     eval_agent = EvalAgentDeepCFR.load_from_disk(
-        path_to_eval_agent='./assets/fhp/eval_agentAVRG_NET.pkl'
+        path_to_eval_agent='./assets/eval/30/eval_agentSINGLE.pkl'
     )
 
     print(f'game cls = {eval_agent.env_bldr.env_cls}')
@@ -12,7 +11,7 @@ if __name__ == '__main__':
     game = InteractiveGame(
         env_cls=eval_agent.env_bldr.env_cls,
         env_args=eval_agent.env_bldr.env_args,
-        seats_human_plays_list=[],
+        seats_human_plays_list=[0],
         eval_agent=eval_agent,
     )
 
