@@ -41,6 +41,7 @@ class InteractiveGame:
 
         self._seats_human_plays_list = seats_human_plays_list
         self._winnings_per_seat = [0 for _ in range(self._env.N_SEATS)]
+        self.min_bet_sz = 0
 
     @property
     def seats_human_plays_list(self):
@@ -63,20 +64,30 @@ class InteractiveGame:
         self._env.render(mode="TEXT")
 
     def play_slumbot(self, action: str, data: dict):
-        current_player_id = 0
+        # set
+        self._env.current_round = data['street']
+        self._env.board = np.array([self.card2arr(card) for card in data['board_cards']])
+        self.main_pot = data['street_last_bet']
+        self.min_bet_sz = max(self.min_bet_sz, self.main_pot)
+        self.side_pots = data['total_last_bet']
+        # detect
+        current_player_id = 0 # if self._env.current_round == 0 else 1
         action_tuple = self._env.bot_api_ask_action(self.slumbot_to_model(action))
 
         if self._eval_agent is not None:
-            print(f"[Slumbot Input] action = {action_tuple}, curr player id = {current_player_id}")
+            print(f"[Slumbot Input] action = {action_tuple}, curr player id = {current_player_id}, street id = {self._env.current_round}")
             self._eval_agent.notify_of_processed_tuple_action(action_he_did=action_tuple,
                                                                           p_id_acted=current_player_id)
-        
-        self._env.current_round = data['street']
-        self._env.board = np.array([self.card2arr(card) for card in data['hole_cards']])
-        self.main_pot = data['street_last_bet']
-        self.side_pots = data['total_last_bet']
 
     def play_my_bot(self, data: dict):
+        # set
+        print(f"[Mybot] data input = {data}")
+        self._env.current_round = data['street']
+        self._env.board = np.array([self.card2arr(card) for card in data['board_cards']])
+        self.main_pot = data['street_last_bet']
+        self.min_bet_sz = max(self.min_bet_sz, self.main_pot)
+        self.side_pots = data['total_last_bet']
+        # detect
         current_player_id = 0
         a_idx, frac = self._eval_agent.get_action_frac_tuple(step_env=True)
         if a_idx == 2:
@@ -85,8 +96,8 @@ class InteractiveGame:
         else:
             action_tuple = [a_idx, -1]
                     
-        print(f"[Mybot] {action_tuple}")
-        return self.model_to_slumbot(action_tuple)
+        print(f"[Mybot] action tuple = {action_tuple}, street id = {self._env.current_round}")
+        return self.model_to_slumbot(action_tuple, data)
 
     def start_to_play(self, render_mode="TEXT", limit_numpy_digits=True):
         # ______________________________________________ one episode _______________________________________________
@@ -123,7 +134,7 @@ class InteractiveGame:
             print("Current Winnings per player:", self._winnings_per_seat)
 
 
-    def model_to_slumbot(self, action_tuple: Tuple[int, int]) -> str:
+    def model_to_slumbot(self, action_tuple: Tuple[int, int], data: dict) -> str:
         action = action_tuple[0]
         bet_sz = action_tuple[1]
         incr = ''
@@ -131,12 +142,15 @@ class InteractiveGame:
         if action == Poker.FOLD:
             incr = 'f'
         elif action == Poker.CHECK_CALL:
-            if bet_sz == -1:
-                incr = 'k'
-            else:
+            if bet_sz == -1 and data['street_last_bet'] > 0:
                 incr = 'c'
+            else:
+                incr = 'k'
         elif action == Poker.BET_RAISE:
-            incr = f'b{abs(bet_sz)}'
+            if data['street_last_bet'] > 0:
+                incr = f"b{max(abs(bet_sz), data['street_last_bet']*2)}"
+            else:
+                incr = f"b{max(abs(bet_sz), self.min_bet_sz)}"
         
         return incr
 

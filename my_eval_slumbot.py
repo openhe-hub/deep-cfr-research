@@ -298,7 +298,8 @@ def Act(token, action):
 
     if 'error_msg' in r:
         print('Error: %s' % r['error_msg'])
-        sys.exit(-1)
+        raise Exception(r['error_msg'])
+        # sys.exit(-1)
         
     return r
 
@@ -319,6 +320,7 @@ def DiffAction(old_action: str, action: str):
 
 def GetGameData(resp, parsed_action):
     data = {
+        "old_action": resp.get("action"),
         "hole_cards": resp.get('hole_cards'),
         "board_cards": resp.get('board'),
         "street": parsed_action['st'],
@@ -339,8 +341,10 @@ def isFirst(resp) -> bool:
 def PlayHand(token, my_bot: MyBot):
     r = NewHand(token)
     is_first = isFirst(r)
+    old_street_id = 0
     print(r)
     print(f"is first = {is_first}")
+    if is_first: return ("", 0, {})
     my_bot.reset(0, r.get('hole_cards'))
     # We may get a new token back from /api/new_hand
     new_token = r.get('token')
@@ -357,25 +361,36 @@ def PlayHand(token, my_bot: MyBot):
         winnings = r.get('winnings')
         print('Action: %s' % action)
         print(f'Diff Action: {diff_action}')
+        # update data
+        a = ParseAction(action)
+        data = GetGameData(r, a)
+        street_id = a.get('st')
+
         if client_pos:
             print('Client pos: %i' % client_pos)
         if winnings is not None:
             print('Hand winnings: %i' % winnings)
-            return (token, winnings)
+            return (token, winnings, data)
+        
         # Need to check or call
-        a = ParseAction(action)
-        data = GetGameData(r, a)
+        if street_id > old_street_id:
+            incr = my_bot.play_my_bot(data)
+            last_play = incr
+            print('Sending incremental action: %s' % incr)
+            r = Act(token, incr)
+            old_street_id = street_id
+        else:
+            # play slumbot
+            my_bot.play_slumbot(diff_action, data)
 
-        # play slumbot
-        my_bot.play_slumbot(diff_action, data)
-
-        if 'error' in a:
-            print('Error parsing action %s: %s' % (action, a['error']))
-            sys.exit(-1)
-        incr = my_bot.play_my_bot(data)
-        last_play = incr
-        print('Sending incremental action: %s' % incr)
-        r = Act(token, incr)
+            if 'error' in a:
+                print('Error parsing action %s: %s' % (action, a['error']))
+                sys.exit(-1)
+            incr = my_bot.play_my_bot(data)
+            last_play = incr
+            print('Sending incremental action: %s' % incr)
+            r = Act(token, incr)
+        print('finish playing round once.')
         
 def Login(username, password):
     data = {"username": username, "password": password}
@@ -416,13 +431,31 @@ def main():
     else:
         token = None
 
-    num_hands = 1
+    num_hands = 100
+    curr_hands = 0
     winnings = 0
     # init bot
     my_bot = MyBot()
-    for h in range(num_hands):
-        (token, hand_winnings) = PlayHand(token, my_bot)
+
+    while curr_hands != num_hands:
+        try:
+            (token, hand_winnings, data) = PlayHand(token, my_bot)
+        except Exception as e:
+            print(f"Error in PlayHand: {e}")
+            hand_winnings = 0
+            continue
+
+        if token == "": 
+            continue 
+
         winnings += hand_winnings
+
+        with open('./assets/slumbot/record.txt', 'a') as fp:
+            if hand_winnings > 0 and data['old_action'] == '':
+                data['old_action'] = 'f'
+            fp.write(f"id = {curr_hands}, hand win = {hand_winnings}, total win = {winnings}, history action = {data['old_action']}, hole cards = {data['hole_cards']}, board cards = {data['board_cards']}\n")
+        curr_hands += 1
+
     print('Total winnings: %i' % winnings)
 
     
