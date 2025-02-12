@@ -431,11 +431,14 @@ def main():
     else:
         token = None
 
-    num_hands = 100
+    num_hands = 1000
     curr_hands = 0
     winnings = 0
     # init bot
     my_bot = MyBot()
+    # clear previous records
+    with open('./assets/slumbot/record.txt', 'w') as fp:
+        pass
 
     while curr_hands != num_hands:
         try:

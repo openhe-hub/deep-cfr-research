@@ -62,6 +62,7 @@ class InteractiveGame:
         self._env.seats[player_id].hand = np.array([self.card2arr(card) for card in hold_cards])
         self._env.seats[[1, 0][player_id]].hand = np.array([])
         self._env.render(mode="TEXT")
+        self.min_bet_sz = 0
 
     def play_slumbot(self, action: str, data: dict):
         # set
