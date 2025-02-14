@@ -281,3 +281,4 @@ $RECYCLE.BIN/
 # customized
 assets/
 test/slumbot/config.toml
+config/

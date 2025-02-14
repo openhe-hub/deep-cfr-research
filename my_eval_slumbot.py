@@ -47,6 +47,7 @@
 
 import requests
 import sys
+import toml
 
 from interactive import InteractiveGame
 from DeepCFR.EvalAgentDeepCFR import EvalAgentDeepCFR
@@ -424,8 +425,9 @@ def Login(username, password):
 
 
 def main():
-    username = 'openhe'
-    password = '5f6e778dx'
+    config = toml.load('./config/config.toml')
+    username = config['slumbot']['username']
+    password = config['slumbot']['password']
     if username and password:
         token = Login(username, password)
     else:
