@@ -75,16 +75,21 @@ class MyBot:
         )
 
         self.game.init()
+        self.is_first = True
+        self.cnt_diff = 0
     
     def reset(self, player_id, hole_cards):
-        self.game._seats_human_plays_list = [1, 0][player_id] # rev, player id = slumbot, model id = my bot
+        if not self.is_first:
+            self.game._seats_human_plays_list = [1, 0][player_id] # rev, player id = slumbot, model id = my bot
+        else:
+            self.game._seats_human_plays_list = player_id
         self.game.reset(player_id, hole_cards)
     
     def play_slumbot(self, action: str, data: dict):
-        self.game.play_slumbot(action, data)
+        self.game.play_slumbot(action, data, self.is_first)
 
     def play_my_bot(self, data: dict) -> str:
-        return self.game.play_my_bot(data)
+        return self.game.play_my_bot(data, self.is_first)
 
 
 def ParseAction(action):
@@ -319,7 +324,7 @@ def DiffAction(old_action: str, action: str):
 
     return diff
 
-def GetGameData(resp, parsed_action):
+def GetGameData(resp, parsed_action, is_first):
     data = {
         "old_action": resp.get("action"),
         "hole_cards": resp.get('hole_cards'),
@@ -328,6 +333,8 @@ def GetGameData(resp, parsed_action):
         "seat_id": resp.get('client_pos'),
         'street_last_bet': parsed_action['street_last_bet_to'],
         'total_last_bet': parsed_action['total_last_bet_to'],
+        "is_first": is_first,
+        "bot_hole_cards": resp.get("bot_hole_cards"),
     }
     return data
 
@@ -345,8 +352,11 @@ def PlayHand(token, my_bot: MyBot):
     old_street_id = 0
     print(r)
     print(f"is first = {is_first}")
-    if is_first: return ("", 0, {})
-    my_bot.reset(0, r.get('hole_cards'))
+    my_bot.is_first = is_first
+    if not is_first:
+        my_bot.reset(0, r.get('hole_cards'))
+    else:
+        my_bot.reset(1, r.get('hole_cards'))
     # We may get a new token back from /api/new_hand
     new_token = r.get('token')
     if new_token:
@@ -364,7 +374,7 @@ def PlayHand(token, my_bot: MyBot):
         print(f'Diff Action: {diff_action}')
         # update data
         a = ParseAction(action)
-        data = GetGameData(r, a)
+        data = GetGameData(r, a, is_first)
         street_id = a.get('st')
 
         if client_pos:
@@ -374,7 +384,7 @@ def PlayHand(token, my_bot: MyBot):
             return (token, winnings, data)
         
         # Need to check or call
-        if street_id > old_street_id:
+        if street_id > old_street_id or (street_id==old_street_id and is_first):
             incr = my_bot.play_my_bot(data)
             last_play = incr
             print('Sending incremental action: %s' % incr)
@@ -433,13 +443,14 @@ def main():
     else:
         token = None
 
-    num_hands = 1000
+    num_hands = 500
     curr_hands = 0
     winnings = 0
+    record_path = './assets/slumbot/record.txt'
     # init bot
     my_bot = MyBot()
     # clear previous records
-    with open('./assets/slumbot/record.txt', 'w') as fp:
+    with open(record_path, 'w') as fp:
         pass
 
     while curr_hands != num_hands:
@@ -450,19 +461,22 @@ def main():
             hand_winnings = 0
             continue
 
-        if token == "": 
+        my_bot.cnt_diff += 1 if my_bot.is_first else -1
+        if my_bot.cnt_diff > 0 or my_bot.cnt_diff < -1: 
+            my_bot.cnt_diff = max(my_bot.cnt_diff, -1)
+            my_bot.cnt_diff = min(my_bot.cnt_diff, 0)
             continue 
 
         winnings += hand_winnings
 
-        with open('./assets/slumbot/record.txt', 'a') as fp:
+        with open(record_path, 'a') as fp:
             if hand_winnings > 0 and data['old_action'] == '':
                 data['old_action'] = 'f'
-            fp.write(f"id = {curr_hands}, hand win = {hand_winnings}, total win = {winnings}, history action = {data['old_action']}, hole cards = {data['hole_cards']}, board cards = {data['board_cards']}\n")
+            fp.write(f"id = {curr_hands}, is first = {data['is_first']}, hand win = {hand_winnings}, total win = {winnings}, history action = {data['old_action']}, hole cards = {data['hole_cards']}, bot hole cards = {data['bot_hole_cards']}, board cards = {data['board_cards']}\n")
         curr_hands += 1
 
     print('Total winnings: %i' % winnings)
-
+    print(f'BB/100 = {winnings/BIG_BLIND/num_hands*100}')
     
 if __name__ == '__main__':
     main()

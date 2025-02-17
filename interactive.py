@@ -64,7 +64,7 @@ class InteractiveGame:
         self._env.render(mode="TEXT")
         self.min_bet_sz = 0
 
-    def play_slumbot(self, action: str, data: dict):
+    def play_slumbot(self, action: str, data: dict, is_first: bool):
         # set
         self._env.current_round = data['street']
         self._env.board = np.array([self.card2arr(card) for card in data['board_cards']])
@@ -72,7 +72,7 @@ class InteractiveGame:
         self.min_bet_sz = max(self.min_bet_sz, self.main_pot)
         self.side_pots = data['total_last_bet']
         # detect
-        current_player_id = 0 # if self._env.current_round == 0 else 1
+        current_player_id = 1 if is_first else 0 
         action_tuple = self._env.bot_api_ask_action(self.slumbot_to_model(action))
 
         if self._eval_agent is not None:
@@ -80,7 +80,7 @@ class InteractiveGame:
             self._eval_agent.notify_of_processed_tuple_action(action_he_did=action_tuple,
                                                                           p_id_acted=current_player_id)
 
-    def play_my_bot(self, data: dict):
+    def play_my_bot(self, data: dict, is_first: bool):
         # set
         print(f"[Mybot] data input = {data}")
         self._env.current_round = data['street']
@@ -89,11 +89,11 @@ class InteractiveGame:
         self.min_bet_sz = max(self.min_bet_sz, self.main_pot)
         self.side_pots = data['total_last_bet']
         # detect
-        current_player_id = 0
+        current_player_id = 0 if is_first else 1
         a_idx, frac = self._eval_agent.get_action_frac_tuple(step_env=True)
         if a_idx == 2:
             action_tuple = [2, self._env.get_fraction_of_pot_raise(fraction=frac,
-                                                                               player_that_bets=current_player_id)]
+                                                                player_that_bets=current_player_id)]
         else:
             action_tuple = [a_idx, -1]
                     
