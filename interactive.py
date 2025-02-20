@@ -73,7 +73,8 @@ class InteractiveGame:
         self.side_pots = data['total_last_bet']
         # detect
         current_player_id = 1 if is_first else 0 
-        action_tuple = self._env.bot_api_ask_action(self.slumbot_to_model(action))
+        # action_tuple = self._env.bot_api_ask_action(self.slumbot_to_model(action))
+        action_tuple = self.slumbot_to_model(action)
 
         if self._eval_agent is not None:
             print(f"[Slumbot Input] action = {action_tuple}, curr player id = {current_player_id}, street id = {self._env.current_round}")
@@ -105,23 +106,6 @@ class InteractiveGame:
         self._env.render(mode=render_mode)
         while True:
             current_player_id = self._env.current_player.seat_id
-
-            # if self._eval_agent is not None:
-            #     assert np.array_equal(self._env.board, self._eval_agent._internal_env_wrapper.env.board)
-            #     assert np.array_equal(np.array(self._env.side_pots),
-            #                               np.array(self._eval_agent._internal_env_wrapper.env.side_pots))
-            #     assert self._env.current_player.seat_id == \
-            #                self._eval_agent._internal_env_wrapper.env.current_player.seat_id
-            #     assert self._env.current_round == self._eval_agent._internal_env_wrapper.env.current_round
-
-            # Human acts
-            # if current_player_id in self._seats_human_plays_list:
-                
-
-            # Agent acts
-            # else:
-
-
             obs, rews, done, info = self._env._step(processed_action=action_tuple)
             self._env.render(mode=render_mode)
 
@@ -152,16 +136,18 @@ class InteractiveGame:
                 incr = f"b{max(abs(bet_sz), data['street_last_bet']*2)}"
             else:
                 incr = f"b{max(abs(bet_sz), self.min_bet_sz)}"
+            # incr = f"b{abs(bet_sz)}"
         
         return incr
 
-    def slumbot_to_model(self, action: str) -> int:
+    def slumbot_to_model(self, action: str, size: float=0.0) -> [int, float]:
         if action == 'f':
-            return Poker.FOLD
+            return [Poker.FOLD, 0]
         elif action == 'k' or action == 'c':
-            return Poker.CHECK_CALL
+            return [Poker.CHECK_CALL, 0]
         elif action.startswith('b'):
-            return Poker.BET_RAISE
+            size = action[:1]
+            return [Poker.BET_RAISE, size]
     
     def card2arr(str, card: str) -> np.array:
         assert len(card) == 2, "Card string must be exactly 2 characters."
