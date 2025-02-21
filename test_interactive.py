@@ -1,4 +1,4 @@
-from interactive import InteractiveGame
+from interactive0 import InteractiveGame
 from DeepCFR.EvalAgentDeepCFR import EvalAgentDeepCFR
 
 if __name__ == '__main__':

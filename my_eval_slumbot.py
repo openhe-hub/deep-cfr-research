@@ -59,8 +59,6 @@ SMALL_BLIND = 50
 BIG_BLIND = 100
 STACK_SIZE = 20000
 
-last_play = ''
-
 class MyBot:
     def __init__(self):
         self.eval_agent = EvalAgentDeepCFR.load_from_disk(
@@ -309,7 +307,8 @@ def Act(token, action):
         
     return r
 
-def DiffAction(old_action: str, action: str):
+def DiffAction(old_action: str, action: str, last_play: str):
+    print(f"{old_action}, {action}, {last_play}")
     diff = action.replace(old_action, "")
     if diff.endswith('/'):
         diff = diff[:-1]
@@ -350,8 +349,7 @@ def PlayHand(token, my_bot: MyBot):
     r = NewHand(token)
     is_first = isFirst(r)
     old_street_id = 0
-    print(r)
-    print(f"is first = {is_first}")
+    last_play = ''
     my_bot.is_first = is_first
     if not is_first:
         my_bot.reset(0, r.get('hole_cards'))
@@ -365,7 +363,7 @@ def PlayHand(token, my_bot: MyBot):
         print('-----------------')
         old_action = r.get('old_action')
         action = r.get('action')
-        diff_action = DiffAction(old_action, action)
+        diff_action = DiffAction(old_action, action, last_play)
         client_pos = r.get('client_pos')
         hole_cards = r.get('hole_cards')
         board = r.get('board')
@@ -443,7 +441,7 @@ def main():
     else:
         token = None
 
-    num_hands = 500
+    num_hands = 1
     curr_hands = 0
     winnings = 0
     record_path = './assets/slumbot/record.txt'
@@ -476,7 +474,7 @@ def main():
         curr_hands += 1
 
     print('Total winnings: %i' % winnings)
-    print(f'BB/100 = {winnings/BIG_BLIND/num_hands*100}')
+    # print(f'BB/100 = {winnings/BIG_BLIND/num_hands*100}')
     
 if __name__ == '__main__':
     main()

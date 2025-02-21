@@ -140,13 +140,13 @@ class InteractiveGame:
         
         return incr
 
-    def slumbot_to_model(self, action: str, size: float=0.0) -> [int, float]:
+    def slumbot_to_model(self, action: str, size: float=0.0) -> Tuple[int, float]:
         if action == 'f':
             return [Poker.FOLD, 0]
         elif action == 'k' or action == 'c':
             return [Poker.CHECK_CALL, 0]
         elif action.startswith('b'):
-            size = action[:1]
+            size = int(action[1:])
             return [Poker.BET_RAISE, size]
     
     def card2arr(str, card: str) -> np.array:
