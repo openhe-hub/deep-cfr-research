@@ -62,7 +62,7 @@ STACK_SIZE = 20000
 class MyBot:
     def __init__(self):
         self.eval_agent = EvalAgentDeepCFR.load_from_disk(
-            path_to_eval_agent='./assets/eval/30/eval_agentSINGLE.pkl'
+            path_to_eval_agent='./assets/eval/90/eval_agentSINGLE.pkl'
         )
 
         self.game = InteractiveGame(
@@ -308,7 +308,7 @@ def Act(token, action):
     return r
 
 def DiffAction(old_action: str, action: str, last_play: str):
-    print(f"{old_action}, {action}, {last_play}")
+    # print(f"{old_action}, {action}, {last_play}")
     diff = action.replace(old_action, "")
     if diff.endswith('/'):
         diff = diff[:-1]
@@ -368,8 +368,8 @@ def PlayHand(token, my_bot: MyBot):
         hole_cards = r.get('hole_cards')
         board = r.get('board')
         winnings = r.get('winnings')
-        print('Action: %s' % action)
-        print(f'Diff Action: {diff_action}')
+        # print('Action: %s' % action)
+        # print(f'Diff Action: {diff_action}')
         # update data
         a = ParseAction(action)
         data = GetGameData(r, a, is_first)
@@ -443,13 +443,13 @@ def main():
 
     num_hands = 1
     curr_hands = 0
-    winnings = 0
+    winnings = 12350
     record_path = './assets/slumbot/record.txt'
     # init bot
     my_bot = MyBot()
     # clear previous records
-    with open(record_path, 'w') as fp:
-        pass
+    # with open(record_path, 'w') as fp:
+    #     pass
 
     while curr_hands != num_hands:
         try:
@@ -470,7 +470,7 @@ def main():
         with open(record_path, 'a') as fp:
             if hand_winnings > 0 and data['old_action'] == '':
                 data['old_action'] = 'f'
-            fp.write(f"id = {curr_hands}, is first = {data['is_first']}, hand win = {hand_winnings}, total win = {winnings}, history action = {data['old_action']}, hole cards = {data['hole_cards']}, bot hole cards = {data['bot_hole_cards']}, board cards = {data['board_cards']}\n")
+            fp.write(f"id = {curr_hands + 498}, is first = {data['is_first']}, hand win = {hand_winnings}, total win = {winnings}, history action = {data['old_action']}, hole cards = {data['hole_cards']}, bot hole cards = {data['bot_hole_cards']}, board cards = {data['board_cards']}\n")
         curr_hands += 1
 
     print('Total winnings: %i' % winnings)
