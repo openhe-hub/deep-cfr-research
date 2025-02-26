@@ -443,9 +443,9 @@ def main():
 
     num_hands = 1
     curr_hands = 0
-    winnings = 12350
+    winnings = 0
     record_path = './assets/slumbot/record.txt'
-    # init bot
+    # init bot 
     my_bot = MyBot()
     # clear previous records
     # with open(record_path, 'w') as fp:
@@ -470,7 +470,7 @@ def main():
         with open(record_path, 'a') as fp:
             if hand_winnings > 0 and data['old_action'] == '':
                 data['old_action'] = 'f'
-            fp.write(f"id = {curr_hands + 498}, is first = {data['is_first']}, hand win = {hand_winnings}, total win = {winnings}, history action = {data['old_action']}, hole cards = {data['hole_cards']}, bot hole cards = {data['bot_hole_cards']}, board cards = {data['board_cards']}\n")
+            fp.write(f"id = {curr_hands}, is first = {data['is_first']}, hand win = {hand_winnings}, total win = {winnings}, history action = {data['old_action']}, hole cards = {data['hole_cards']}, bot hole cards = {data['bot_hole_cards']}, board cards = {data['board_cards']}\n")
         curr_hands += 1
 
     print('Total winnings: %i' % winnings)
