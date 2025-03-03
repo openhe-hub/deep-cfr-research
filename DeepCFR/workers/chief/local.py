@@ -148,7 +148,7 @@ class Chief(_ChiefBase):
             t_prof = copy.deepcopy(self._t_prof)
             t_prof.eval_modes_of_algo = [MODE]
 
-            eval_agent = EvalAgentDeepCFR(t_prof=t_prof)
+            eval_agent = EvalAgentDeepCFR(t_prof=t_prof, device='cuda:0')
             eval_agent.reset()
 
             w = {EvalAgentDeepCFR.EVAL_MODE_AVRG_NET: self._pull_avrg_net_eval_strat()}
@@ -164,7 +164,7 @@ class Chief(_ChiefBase):
             t_prof = copy.deepcopy(self._t_prof)
             t_prof.eval_modes_of_algo = [MODE]
 
-            eval_agent = EvalAgentDeepCFR(t_prof=t_prof)
+            eval_agent = EvalAgentDeepCFR(t_prof=t_prof, device='cuda:0')
             eval_agent.reset()
 
             eval_agent._strategy_buffers = self._strategy_buffers  # could copy - it's just for the export, so it's ok

@@ -285,15 +285,11 @@ class EvalAgentDeepCFR(_EvalAgentBase):
             if self._episode_net_idxs[p_id_acting] is None:  # Iteration 0
                 action = legal_actions_list[np.random.randint(len(legal_actions_list))]
             else:  # Iteration > 0
-                # print(f"[GET ACTION] pub_obses = {[self._internal_env_wrapper.get_current_obs()]}")
-                # print(f"[GET ACTION] range_idxs = {[range_idx]}")
-                # print(f"[GET ACTION] legal_actions_lists = {[legal_actions_list]}")
                 action = self._strategy_buffers[p_id_acting].get(self._episode_net_idxs[p_id_acting]).get_action(
                     pub_obses=[self._internal_env_wrapper.get_current_obs()],
                     range_idxs=[range_idx],
                     legal_actions_lists=[legal_actions_list],
                 )[0].item()
-                # print(f"[GET ACTION] action = {action}")
 
             if step_env:
                 # add to history before modifying env state
