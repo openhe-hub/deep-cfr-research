@@ -62,7 +62,7 @@ STACK_SIZE = 20000
 class MyBot:
     def __init__(self):
         self.eval_agent = EvalAgentDeepCFR.load_from_disk(
-            path_to_eval_agent='./assets/eval/9/eval_agentSINGLE.pkl'
+            path_to_eval_agent='./assets/eval/20/eval_agentSINGLE.pkl'
         )
 
         self.game = InteractiveGame(
