@@ -62,7 +62,7 @@ STACK_SIZE = 20000
 class MyBot:
     def __init__(self):
         self.eval_agent = EvalAgentDeepCFR.load_from_disk(
-            path_to_eval_agent='./assets/eval/20/eval_agentSINGLE.pkl'
+            path_to_eval_agent='./assets/eval/45/eval_agentSINGLE.pkl'
         )
 
         self.game = InteractiveGame(
@@ -368,8 +368,6 @@ def PlayHand(token, my_bot: MyBot):
         hole_cards = r.get('hole_cards')
         board = r.get('board')
         winnings = r.get('winnings')
-        # print('Action: %s' % action)
-        # print(f'Diff Action: {diff_action}')
         # update data
         a = ParseAction(action)
         data = GetGameData(r, a, is_first)
