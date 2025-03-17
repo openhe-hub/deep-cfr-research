@@ -15,6 +15,7 @@ class AdvWrapper(_NetWrapperBase):
             owner=owner,
             device=device
         )
+        self.log_path = '/home/lanhou/Workspace/Deep-CFR/assets/debug/debug.log'
 
     def get_advantages(self, pub_obses, range_idxs, legal_action_mask):
         self._net.eval()
@@ -22,6 +23,9 @@ class AdvWrapper(_NetWrapperBase):
             return self._net(pub_obses=pub_obses, range_idxs=range_idxs, legal_action_masks=legal_action_mask)
 
     def _mini_batch_loop(self, buffer, grad_mngr):
+        with open(self.log_path, 'w') as fp:
+            fp.write(f"buffer = {buffer}\n")
+        
         batch_pub_obs, \
         batch_range_idxs, \
         batch_legal_action_masks, \

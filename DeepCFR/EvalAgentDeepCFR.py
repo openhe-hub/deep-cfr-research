@@ -241,7 +241,7 @@ class EvalAgentDeepCFR(_EvalAgentBase):
 
     def get_action(self, step_env=True, need_probs=False):
         """ !! BEFORE CALLING, NOTIFY EVALAGENT OF THE PAST ACTIONS / ACTIONSEQUENCE !! """
-
+        # print("[GET ACTION]")
         p_id_acting = self._internal_env_wrapper.env.current_player.seat_id
         range_idx = self._internal_env_wrapper.env.get_range_idx(p_id=p_id_acting)
 
@@ -276,6 +276,7 @@ class EvalAgentDeepCFR(_EvalAgentBase):
         # """"""""""""""""""""""""""""
         elif self._mode == self.EVAL_MODE_SINGLE:
             if need_probs:
+                print("[NEED PROBS]")
                 a_probs_all_hands = self.get_a_probs_for_each_hand()
             else:
                 a_probs_all_hands = None  # not needed
@@ -290,6 +291,7 @@ class EvalAgentDeepCFR(_EvalAgentBase):
                     range_idxs=[range_idx],
                     legal_actions_lists=[legal_actions_list],
                 )[0].item()
+                print("[ACTION] ", action)
 
             if step_env:
                 # add to history before modifying env state
@@ -303,6 +305,7 @@ class EvalAgentDeepCFR(_EvalAgentBase):
             raise UnknownModeError(self._mode)
 
     def get_action_frac_tuple(self, step_env):
+        # print("[GET ACTION FRAC TUPLE]")
         a_idx_raw = self.get_action(step_env=step_env, need_probs=False)[0]
 
         if self.env_bldr.env_cls.IS_FIXED_LIMIT_GAME:

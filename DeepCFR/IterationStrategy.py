@@ -49,7 +49,7 @@ class IterationStrategy:
             range_idxs (list):              batch (list) of range_idxs (one for each pub_obs) [2, 421, 58, 912, ...]
             legal_action_masks (Torch.tensor)
         """
-
+        # print("[GET A PROBS 2]")
         with torch.no_grad():
             bs = len(range_idxs)
 

@@ -1,7 +1,7 @@
 # Copyright (c) 2019 Eric Steinberger
 import copy
 import time
-
+import json
 import numpy as np
 
 from typing import Tuple
@@ -43,6 +43,8 @@ class InteractiveGame:
         self._winnings_per_seat = [0 for _ in range(self._env.N_SEATS)]
         self.min_bet_sz = 0
 
+        self.cache_path = '/home/lanhou/Workspace/Deep-CFR/assets/tmp/cache.json'
+
     @property
     def seats_human_plays_list(self):
         return copy.deepcopy(self._seats_human_plays_list)
@@ -61,10 +63,11 @@ class InteractiveGame:
             self._eval_agent.reset(deck_state_dict=self._env.cards_state_dict())
         self._env.seats[player_id].hand = np.array([self.card2arr(card) for card in hold_cards])
         self._env.seats[[1, 0][player_id]].hand = np.array([])
-        self._env.render(mode="TEXT")
+        # self._env.render(mode="TEXT")
         self.min_bet_sz = 0
 
     def play_slumbot(self, action: str, data: dict, is_first: bool):
+        # self._env.render(mode="TEXT")
         # set
         self._env.current_round = data['street']
         self._env.board = np.array([self.card2arr(card) for card in data['board_cards']])
@@ -82,6 +85,7 @@ class InteractiveGame:
                                                                           p_id_acted=current_player_id)
 
     def play_my_bot(self, data: dict, is_first: bool):
+        # self._env.render(mode="TEXT")
         # set
         print(f"[Mybot] data input = {data}")
         self._env.current_round = data['street']
@@ -89,6 +93,11 @@ class InteractiveGame:
         self.main_pot = data['street_last_bet']
         self.min_bet_sz = max(self.min_bet_sz, self.main_pot)
         self.side_pots = data['total_last_bet']
+
+        self.save_to_cache(
+            hole_cards=data['hole_cards'],
+            board_cards=data['board_cards']
+        )
         # detect
         current_player_id = 0 if is_first else 1
         a_idx, frac = self._eval_agent.get_action_frac_tuple(step_env=True)
@@ -149,7 +158,7 @@ class InteractiveGame:
             size = int(action[1:])
             return [Poker.BET_RAISE, size]
     
-    def card2arr(str, card: str) -> np.array:
+    def card2arr(self, card: str) -> np.array:
         assert len(card) == 2, "Card string must be exactly 2 characters."
 
         RANK_DICT = {'2': 0, '3': 1, '4': 2, '5': 3, '6': 4, '7': 5, '8': 6, '9': 7, 'T': 8, 'J': 9, 'Q': 10, 'K': 11, 'A': 12}
@@ -163,4 +172,11 @@ class InteractiveGame:
 
         return np.array([rank, suit])
 
+    def save_to_cache(self, hole_cards, board_cards):
+        with open(self.cache_path, 'w') as f:
+            json.dump({
+                'use_cache': True,
+                'hole_cards': hole_cards,
+                'board_cards': board_cards,
+            }, f, indent=4, ensure_ascii=False)
 
