@@ -43,7 +43,7 @@ class InteractiveGame:
         self._winnings_per_seat = [0 for _ in range(self._env.N_SEATS)]
         self.min_bet_sz = 0
 
-        self.cache_path = '/home/lanhou/Workspace/Deep-CFR/assets/tmp/cache.json'
+        self.cache_path = './assets/tmp/cache.json'
 
     @property
     def seats_human_plays_list(self):

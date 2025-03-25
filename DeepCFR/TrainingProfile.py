@@ -111,6 +111,11 @@ class TrainingProfile(TrainingProfileBase):
                  export_each_net=False,
                  eval_agent_max_strat_buf_size=None,
 
+                 # ------ ResNet
+                 card_res_block_num=2,
+                 state_res_block_num=2,
+                 final_res_block_num=2,
+
                  # ------ Optional
                  lbr_args=None,
                  rl_br_args=None,
@@ -140,7 +145,7 @@ class TrainingProfile(TrainingProfileBase):
                                        n_merge_and_table_layer_units=n_merge_and_table_layer_units_avrg)
 
         elif nn_type == "feedforward":
-            from PokerRL.rl.neural.MainPokerModuleFLAT import MPMArgsFLAT
+            from PokerRL.rl.neural.MainPokerModuleFlatResv2 import MPMArgsFLAT
 
             env_bldr_cls = FlatLimitPokerEnvBuilder
 
@@ -152,7 +157,22 @@ class TrainingProfile(TrainingProfileBase):
                                         card_block_units=n_cards_state_units_avrg,
                                         other_units=n_merge_and_table_layer_units_avrg,
                                         normalize=normalize_last_layer_FLAT_avrg)
+        elif nn_type == "resnet":
+            from PokerRL.rl.neural.MainPokerModuleFlatResv3 import MPMArgsFLATV3
 
+            env_bldr_cls = FlatLimitPokerEnvBuilder
+
+            mpm_args_adv = MPMArgsFLATV3(use_pre_layers=use_pre_layers_adv,
+                                       card_block_units=n_cards_state_units_adv,
+                                       other_units=n_merge_and_table_layer_units_adv,
+                                       normalize=normalize_last_layer_FLAT_adv,
+                                       card_res_block_num=card_res_block_num,
+                                       state_res_block_num=state_res_block_num,
+                                       final_res_block_num=final_res_block_num)
+            mpm_args_avrg = MPMArgsFLATV3(use_pre_layers=use_pre_layers_avrg,
+                                        card_block_units=n_cards_state_units_avrg,
+                                        other_units=n_merge_and_table_layer_units_avrg,
+                                        normalize=normalize_last_layer_FLAT_avrg)
         else:
             raise ValueError(nn_type)
 

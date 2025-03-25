@@ -108,8 +108,13 @@ class LearnerActor(WorkerBase):
                               device=self._t_prof.device_inference, cfr_iter=cfr_iter)
             for p in range(self._t_prof.n_seats)
         ]
+        
+        def get_state_dict(owner):
+            state_dict = self._adv_wrappers[s.owner].net_state_dict()
+            # state_dict = {k.replace('module.',''):v for k,v in state_dict.items()}
+
         for s in iteration_strats:
-            s.load_net_state_dict(state_dict=self._adv_wrappers[s.owner].net_state_dict())
+            s.load_net_state_dict(state_dict=get_state_dict(s.owner))
 
         self._data_sampler.generate(n_traversals=self._t_prof.n_traversals_per_iter,
                                     traverser=traverser,

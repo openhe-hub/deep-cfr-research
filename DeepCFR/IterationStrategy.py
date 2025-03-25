@@ -4,6 +4,7 @@
 import numpy as np
 import torch
 from torch.nn import functional as F
+import torch.nn as nn
 
 from PokerRL.rl import rl_util
 from PokerRL.rl.neural.DuelingQNet import DuelingQNet
@@ -228,6 +229,8 @@ class IterationStrategy:
                                         env_bldr=self._env_bldr, device=self._device)
             self._adv_net.load_state_dict(state_dict)
             self._adv_net.to(self._device)
+            # if torch.cuda.device_count() > 1:
+            #     self._adv_net = nn.DataParallel(self._adv_net)
 
         self._adv_net.eval()
         for param in self._adv_net.parameters():

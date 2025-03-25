@@ -4,6 +4,9 @@ import pickle
 import psutil
 from torch.optim import lr_scheduler
 
+import torch
+import torch.nn as nn
+
 from DeepCFR.EvalAgentDeepCFR import EvalAgentDeepCFR
 from PokerRL.rl import rl_util
 from PokerRL.rl.base_cls.workers.ParameterServerBase import ParameterServerBase
@@ -130,7 +133,10 @@ class ParameterServer(ParameterServerBase):
 
     # __________________________________________________________________________________________________________________
     def _get_new_adv_net(self):
-        return DuelingQNet(q_args=self._adv_args.adv_net_args, env_bldr=self._env_bldr, device=self._device)
+        model =  DuelingQNet(q_args=self._adv_args.adv_net_args, env_bldr=self._env_bldr, device=self._device)
+        # if torch.cuda.device_count() > 1:
+        #     model = nn.DataParallel(model)
+        return model
 
     def _get_new_avrg_net(self):
         return AvrgStrategyNet(avrg_net_args=self._avrg_args.avrg_net_args, env_bldr=self._env_bldr,

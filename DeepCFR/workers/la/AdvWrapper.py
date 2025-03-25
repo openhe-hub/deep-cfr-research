@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 
 from PokerRL.rl.neural.DuelingQNet import DuelingQNet
 from PokerRL.rl.neural.NetWrapperBase import NetWrapperArgsBase as _NetWrapperArgsBase
@@ -16,6 +17,8 @@ class AdvWrapper(_NetWrapperBase):
             device=device
         )
         self.log_path = '/home/lanhou/Workspace/Deep-CFR/assets/debug/debug.log'
+        # if torch.cuda.device_count() > 1:
+        #     self._net = nn.DataParallel(self._net)
 
     def get_advantages(self, pub_obses, range_idxs, legal_action_mask):
         self._net.eval()

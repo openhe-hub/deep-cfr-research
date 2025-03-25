@@ -291,7 +291,6 @@ class EvalAgentDeepCFR(_EvalAgentBase):
                     range_idxs=[range_idx],
                     legal_actions_lists=[legal_actions_list],
                 )[0].item()
-                print("[ACTION] ", action)
 
             if step_env:
                 # add to history before modifying env state
