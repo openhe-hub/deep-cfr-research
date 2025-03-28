@@ -91,6 +91,7 @@ class TrainingProfile(TrainingProfileBase):
                  rnn_cls_str_avrg="lstm",
                  rnn_units_avrg=128,
                  rnn_stack_avrg=1,
+
                  dropout_avrg=0.0,
                  use_pre_layers_avrg=False,
                  n_cards_state_units_avrg=96,
@@ -112,9 +113,9 @@ class TrainingProfile(TrainingProfileBase):
                  eval_agent_max_strat_buf_size=None,
 
                  # ------ ResNet
-                 card_res_block_num=2,
-                 state_res_block_num=2,
-                 final_res_block_num=2,
+                 card_res_block_num=10,
+                 state_res_block_num=10,
+                 final_res_block_num=10,
 
                  # ------ Optional
                  lbr_args=None,
@@ -161,6 +162,8 @@ class TrainingProfile(TrainingProfileBase):
             from PokerRL.rl.neural.MainPokerModuleFlatResv3 import MPMArgsFLATV3
 
             env_bldr_cls = FlatLimitPokerEnvBuilder
+
+            print(f"[Res Block] num_block = [{card_res_block_num}, {state_res_block_num}, {final_res_block_num}]")
 
             mpm_args_adv = MPMArgsFLATV3(use_pre_layers=use_pre_layers_adv,
                                        card_block_units=n_cards_state_units_adv,

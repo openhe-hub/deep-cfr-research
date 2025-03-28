@@ -40,7 +40,7 @@ class AvrgReservoirBuffer(_ResBufBase):
 
         if self._nn_type == "recurrent":
             obses = self._pub_obs_buffer[indices.cpu().numpy()]
-        elif self._nn_type == "feedforward":
+        elif self._nn_type == "feedforward" or self._nn_type == "resnet":
             obses = self._pub_obs_buffer[indices].to(device)
         else:
             raise NotImplementedError
@@ -53,7 +53,7 @@ class AvrgReservoirBuffer(_ResBufBase):
             self._iteration_buffer[indices].to(device) / self._last_cfr_iteration_seen
 
     def _add(self, idx, pub_obs, range_idx, legal_action_mask, action_probs, iteration):
-        if self._nn_type == "feedforward":
+        if self._nn_type == "feedforward" or self._nn_type == "resnet":
             pub_obs = torch.from_numpy(pub_obs)
 
         self._pub_obs_buffer[idx] = pub_obs

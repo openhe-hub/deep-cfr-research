@@ -22,7 +22,7 @@ class ReservoirBufferBase:
 
         if nn_type == "recurrent":
             self._pub_obs_buffer = np.empty(shape=(max_size,), dtype=object)
-        elif nn_type == "feedforward":
+        elif nn_type == "feedforward" or nn_type == "resnet":
             self._pub_obs_buffer = torch.zeros((max_size, self._env_bldr.pub_obs_size), dtype=torch.float32,
                                                device=self.device)
         else:
@@ -84,7 +84,7 @@ class ReservoirBufferBase:
             self._legal_action_mask_buffer = state["legal_action_mask_buffer"]
             self._iteration_buffer = state["iteration_buffer"]
 
-        elif self._nn_type == "feedforward":
+        elif self._nn_type == "feedforward" or self._nn_type == "resnet":
             self._pub_obs_buffer = state["pub_obs_buffer"].to(self.device)
             self._range_idx_buffer = state["range_idx_buffer"].to(self.device)
             self._legal_action_mask_buffer = state["legal_action_mask_buffer"].to(self.device)
