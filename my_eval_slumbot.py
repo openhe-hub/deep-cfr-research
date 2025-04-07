@@ -439,7 +439,7 @@ def main():
     else:
         token = None
 
-    num_hands = 1000
+    num_hands = 4000
     curr_hands = 0
     winnings = 0
     record_path = './assets/slumbot/record.txt'
