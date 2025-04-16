@@ -62,8 +62,10 @@ STACK_SIZE = 20000
 class MyBot:
     def __init__(self):
         self.eval_agent = EvalAgentDeepCFR.load_from_disk(
-            path_to_eval_agent='./assets/eval/20/eval_agentSINGLE.pkl'
+            path_to_eval_agent='./assets/eval/10/eval_agentSINGLE.pkl'
         )
+
+        print(self.eval_agent.env_bldr.env_args.bet_sizes_list_as_frac_of_pot)
 
         self.game = InteractiveGame(
             env_cls=self.eval_agent.env_bldr.env_cls,
@@ -346,6 +348,7 @@ def isFirst(resp) -> bool:
         return True
     
 def PlayHand(token, my_bot: MyBot):
+    output_record = [[] for i in range(4)]
     r = NewHand(token)
     is_first = isFirst(r)
     old_street_id = 0
@@ -377,11 +380,13 @@ def PlayHand(token, my_bot: MyBot):
             print('Client pos: %i' % client_pos)
         if winnings is not None:
             print('Hand winnings: %i' % winnings)
-            return (token, winnings, data)
+            return (token, winnings, data, output_record)
         
         # Need to check or call
         if street_id > old_street_id or (street_id==old_street_id and is_first):
-            incr = my_bot.play_my_bot(data)
+            output = my_bot.play_my_bot(data)
+            incr, record = output[0], output[1]
+            output_record[street_id].append(record)
             last_play = incr
             print('Sending incremental action: %s' % incr)
             r = Act(token, incr)
@@ -393,7 +398,9 @@ def PlayHand(token, my_bot: MyBot):
             if 'error' in a:
                 print('Error parsing action %s: %s' % (action, a['error']))
                 sys.exit(-1)
-            incr = my_bot.play_my_bot(data)
+            output = my_bot.play_my_bot(data)
+            incr, record = output[0], output[1]
+            output_record[street_id].append(record)
             last_play = incr
             print('Sending incremental action: %s' % incr)
             r = Act(token, incr)
@@ -439,10 +446,11 @@ def main():
     else:
         token = None
 
-    num_hands = 4000
+    num_hands = 20000
     curr_hands = 0
     winnings = 0
     record_path = './assets/slumbot/record.txt'
+    output_record_path = './assets/slumbot/output_record.txt'
     # init bot 
     my_bot = MyBot()
     # clear previous records
@@ -451,7 +459,7 @@ def main():
 
     while curr_hands != num_hands:
         try:
-            (token, hand_winnings, data) = PlayHand(token, my_bot)
+            (token, hand_winnings, data, output_record) = PlayHand(token, my_bot)
         except Exception as e:
             print(f"Error in PlayHand: {e}")
             hand_winnings = 0
@@ -469,6 +477,9 @@ def main():
             if hand_winnings > 0 and data['old_action'] == '':
                 data['old_action'] = 'f'
             fp.write(f"id = {curr_hands}, is first = {data['is_first']}, hand win = {hand_winnings}, total win = {winnings}, history action = {data['old_action']}, hole cards = {data['hole_cards']}, bot hole cards = {data['bot_hole_cards']}, board cards = {data['board_cards']}\n")
+        
+        with open(output_record_path, 'a') as fp:
+            fp.write(f"{output_record}\n")
         curr_hands += 1
 
     print('Total winnings: %i' % winnings)

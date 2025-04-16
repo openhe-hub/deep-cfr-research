@@ -101,6 +101,7 @@ class InteractiveGame:
         # detect
         current_player_id = 0 if is_first else 1
         a_idx, frac = self._eval_agent.get_action_frac_tuple(step_env=True)
+        print(f"[Mybot] frac = {frac}")
         if a_idx == 2:
             action_tuple = [2, self._env.get_fraction_of_pot_raise(fraction=frac,
                                                                 player_that_bets=current_player_id)]
@@ -108,7 +109,7 @@ class InteractiveGame:
             action_tuple = [a_idx, -1]
                     
         print(f"[Mybot] action tuple = {action_tuple}, street id = {self._env.current_round}")
-        return self.model_to_slumbot(action_tuple, data)
+        return self.model_to_slumbot(action_tuple, data, frac)
 
     def start_to_play(self, render_mode="TEXT", limit_numpy_digits=True):
         # ______________________________________________ one episode _______________________________________________
@@ -128,23 +129,23 @@ class InteractiveGame:
             print("Current Winnings per player:", self._winnings_per_seat)
 
 
-    def model_to_slumbot(self, action_tuple: Tuple[int, int], data: dict) -> str:
+    def model_to_slumbot(self, action_tuple: Tuple[int, int], data: dict, frac: float) -> [str]:
         action = action_tuple[0]
         bet_sz = action_tuple[1]
         incr = ''
 
         if action == Poker.FOLD:
-            incr = 'f'
+            incr = ['f', 'f']
         elif action == Poker.CHECK_CALL:
             if bet_sz == -1 and data['street_last_bet'] > 0:
-                incr = 'c'
+                incr = ['c', 'c']
             else:
-                incr = 'k'
+                incr = ['k', 'k']
         elif action == Poker.BET_RAISE:
             if data['street_last_bet'] > 0:
-                incr = f"b{max(abs(bet_sz), data['street_last_bet']*2)}"
+                incr = [f"b{max(abs(bet_sz), data['street_last_bet']*2)}", f"b{frac}"]
             else:
-                incr = f"b{max(abs(bet_sz), self.min_bet_sz)}"
+                incr = [f"b{max(abs(bet_sz), self.min_bet_sz)}", f"b{frac}"]
             # incr = f"b{abs(bet_sz)}"
         
         return incr
