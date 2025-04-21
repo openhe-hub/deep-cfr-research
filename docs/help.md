@@ -1,21 +1,30 @@
-### 环境配置步骤
-1. 新建conda环境
+### Env Config
+1. conda create -n deep_cfr python=3.8
 2. pip install requests
-3. 对应cuda版本的pytorch
+3. download pytorch (corresponding cuda version)
 4. pip install PokerRL
 5. pip install ray
-### 运行demo可能的bug
-1. 如有此参数报错：redis_max_memory => _redis_max_memory
-2. 非分布式，设置：DISTRIBUTED=False
-3. 无配置pycrayon，端口找不到，注释`Driver.py中 self.crayon = CrayonWrapper(...)`这一段
-4. 新建对应的日志文件夹，`${project}/logs/${name}`, `${project}`为项目根目录，`${name}`为`TrainingProfile`参数中的name
-5. `Driver.py`中更改`self._t_prof.path_log_storage`为本地路径(或许有更好的解决办法)
-### 超参数
-### 日志
-Bug: 新建日志文件夹，并更改代码中的本地路径，可以解决报错，但是不能成功记录日志
-项目的日志从Buffer被导出到ui上了，由于TensorBoard不可用，需要改代码导到本地
-### Agent训练记录
-每个对象写个state dict，每一个iter用pickle持久化，随后读取分析
-* TraingingProfile暂时不做持久化
+### Possible Bugs After Cloning Original Repo 
+1. About redis params: redis_max_memory => _redis_max_memory
+2. Train without distributed GPUs: DISTRIBUTED=False
+3. Dont want Pycrayon, port not found, comment `Driver.py中 self.crayon = CrayonWrapper(...)`
+4. Create the corresponding log folder, `${project}/logs/${name}`, where `${project}` is the project root directory, and `${name}` is the `name` parameter in `TrainingProfile`.
+5. In `Driver.py`, modify `self._t_prof.path_log_storage` to a local path (there might be a better solution).
+### Logs
+Bug: Creating a new log folder and modifying the local path in the code can resolve the error, but it cannot successfully record logs.  
+The project's logs are exported from the Buffer to the UI. Since TensorBoard is unavailable, the code needs to be modified to export logs locally.
+### Agent Training Checkpoints
+Write a state dict for each object, persist each iteration using pickle, and then read it for analysis.  
+* `TrainingProfile` will not be persisted for now.
+### Slumbot Eval Records
+1. assets/slumbot/record.txt: record cards, actions, hand win in each hand
+2. assets/slumbot/output_record.txt: action output from model on every street
+### Some Scripts
+1. test/test_adv_loss.ipynb: visualize loss curves
+2. test/test_exploitability.ipynb: visualize exploitability curve
+3. test/test_slumbot_match.ipynb: show match winning curves and data
+4. test/test_poker_bckt.ipynb: statistics about model action and bucket db
+5. script/mem.sh: show current memory ranking when training / evaluation 
+
 ### TensorBoard
-暂无
+The original project supports TensorBoard, but we don't use TensorBoard here
